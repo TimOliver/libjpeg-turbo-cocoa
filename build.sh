@@ -115,24 +115,33 @@ make_fat_binary() {
 }
 
 make_libjpeg_turbo_xcframework() {
-    BUILD_DIR=$1
-    shift
-    SLICES_DIR=$1
-    shift
-    SLICES=("$@")
+  BUILD_DIR=$1
+  shift
+  SLICES_DIR=$1
+  shift
+  SLICES=("$@")
 
-    # Copy the headers we need
-    HEADERS_DIR=${SLICES_DIR}"/include"
-    mkdir -p ${HEADERS_DIR}
+  # Copy the headers we need to expose
+  HEADERS_DIR=${SLICES_DIR}"/include"
+  mkdir -p ${HEADERS_DIR}
+  cp ${LIBRARY_DIR}"/turbojpeg.h" ${HEADERS_DIR}"/turbojpeg.h"
 
-    cp turbojpeg.h ${HEADERS_DIR}"/turbojpeg.h"
+  # Save a modulemap to the headers folder
+cat <<EOT >> ${HEADERS_DIR}/module.modulemap
+module libturbojpeg [system] {
+  header "turbojpeg.h"
+  export *
+}
+EOT
 
-    SLICE_ARGUMENTS=""
-    for S in ${SLICES[@]}; do
-          SLICE_ARGUMENTS+="-library ${SLICES_DIR}/${S}/libturbojpeg.a -headers ${HEADERS_DIR} "
-    done
+  # Build the arguments list for all of the architectures
+  SLICE_ARGUMENTS=""
+  for S in ${SLICES[@]}; do
+        SLICE_ARGUMENTS+="-library ${SLICES_DIR}/${S}/libturbojpeg.a -headers ${HEADERS_DIR}/ "
+  done
 
-    xcodebuild -create-xcframework ${SLICE_ARGUMENTS} -headers turbojpeg.h -output ${BUILD_DIR}"/"libjpegturbo.xcframework
+  # Build the xcframework
+  xcodebuild -create-xcframework ${SLICE_ARGUMENTS} -output ${BUILD_DIR}"/"libturbojpeg.xcframework
 }
 
 # Commands
