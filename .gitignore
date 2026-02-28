@@ -2,3 +2,6 @@ build-*/*
 !build-*/*/toolchain.cmake
 
 /libjpeg-turbo
+/output
+*.xcframework.zip
+/.claude
