@@ -167,8 +167,9 @@ EOT
   done
 
   if [ ! -z "${STATIC_ARGS}" ]; then
-    rm -rf ${BUILD_DIR}/${LIB_NAME}-static.xcframework
-    xcodebuild -create-xcframework ${STATIC_ARGS} -output ${BUILD_DIR}/${LIB_NAME}-static.xcframework
+    mkdir -p ${BUILD_DIR}/static
+    rm -rf ${BUILD_DIR}/static/${LIB_NAME}.xcframework
+    xcodebuild -create-xcframework ${STATIC_ARGS} -output ${BUILD_DIR}/static/${LIB_NAME}.xcframework
   fi
 
   # Build dynamic xcframework
@@ -180,8 +181,9 @@ EOT
   done
 
   if [ ! -z "${DYNAMIC_ARGS}" ]; then
-    rm -rf ${BUILD_DIR}/${LIB_NAME}-dynamic.xcframework
-    xcodebuild -create-xcframework ${DYNAMIC_ARGS} -output ${BUILD_DIR}/${LIB_NAME}-dynamic.xcframework
+    mkdir -p ${BUILD_DIR}/dynamic
+    rm -rf ${BUILD_DIR}/dynamic/${LIB_NAME}.xcframework
+    xcodebuild -create-xcframework ${DYNAMIC_ARGS} -output ${BUILD_DIR}/dynamic/${LIB_NAME}.xcframework
   fi
 }
 
@@ -294,16 +296,29 @@ package() {
 
   mkdir -p ${OUTPUT_DIR}
 
-  # Find and zip all xcframeworks
+  # Zip xcframeworks from static/ and dynamic/ subdirectories
+  # with platform+linkage in the zip filename
   for PLATFORM_DIR in build-ios build-macos build-tvos build-visionos; do
-    for XCF in ${PLATFORM_DIR}/*.xcframework; do
-      if [ -d "${XCF}" ]; then
-        NAME=$(basename ${XCF})
-        echo "Zipping ${NAME}..."
-        cd ${PLATFORM_DIR}
-        zip -r -y ${OUTPUT_DIR}/${NAME}.zip ${NAME}
-        cd ${BASE_PATH}
+    # Extract platform name (e.g. "ios" from "build-ios")
+    PLATFORM=$(echo ${PLATFORM_DIR} | sed 's/build-//')
+
+    for LINKAGE in static dynamic; do
+      LINKAGE_DIR="${PLATFORM_DIR}/${LINKAGE}"
+      if [ ! -d "${LINKAGE_DIR}" ]; then
+        continue
       fi
+
+      for XCF in ${LINKAGE_DIR}/*.xcframework; do
+        if [ -d "${XCF}" ]; then
+          XCF_NAME=$(basename ${XCF})
+          LIB_NAME=$(echo ${XCF_NAME} | sed 's/\.xcframework//')
+          ZIP_NAME="${LIB_NAME}-${PLATFORM}-${LINKAGE}.xcframework.zip"
+          echo "Zipping ${ZIP_NAME}..."
+          cd ${LINKAGE_DIR}
+          zip -r -y ${OUTPUT_DIR}/${ZIP_NAME} ${XCF_NAME}
+          cd ${BASE_PATH}
+        fi
+      done
     done
   done
 
