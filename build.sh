@@ -111,6 +111,49 @@ make_fat_binary() {
   done
 }
 
+# Create a .framework bundle from a library binary + headers + modulemap
+# Usage: create_framework_bundle FW_PATH MODULE_NAME LIB_PATH HEADERS_DIR MODULEMAP_FILE BUNDLE_ID
+create_framework_bundle() {
+  FW_PATH=$1
+  MODULE_NAME=$2
+  LIB_PATH=$3
+  HEADERS_DIR=$4
+  MODULEMAP_FILE=$5
+  BUNDLE_ID=$6
+
+  rm -rf "${FW_PATH}"
+  mkdir -p "${FW_PATH}/Headers" "${FW_PATH}/Modules"
+
+  # Copy the binary (renamed to match module name, no extension)
+  cp "${LIB_PATH}" "${FW_PATH}/${MODULE_NAME}"
+
+  # Copy headers
+  cp ${HEADERS_DIR}/* "${FW_PATH}/Headers/"
+
+  # Modulemap goes in Modules/, not Headers/
+  cp "${MODULEMAP_FILE}" "${FW_PATH}/Modules/module.modulemap"
+
+  # Write Info.plist
+cat > "${FW_PATH}/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key>
+  <string>${MODULE_NAME}</string>
+  <key>CFBundleIdentifier</key>
+  <string>${BUNDLE_ID}</string>
+  <key>CFBundleName</key>
+  <string>${MODULE_NAME}</string>
+  <key>CFBundleVersion</key>
+  <string>${LIBRARY_VERSION}</string>
+  <key>CFBundlePackageType</key>
+  <string>FMWK</string>
+</dict>
+</plist>
+PLIST
+}
+
 make_xcframework() {
   BUILD_DIR=$1
   shift
@@ -138,16 +181,17 @@ make_xcframework() {
     cp ${HEADER_SOURCE_DIR}/jconfig.h ${HEADERS_DIR}/jconfig.h
   fi
 
-  # Save a modulemap to the headers folder
+  # Save a modulemap to a staging file
+  MODULEMAP_FILE=${SLICES_DIR}"/modulemap-${MODULE_NAME}"
   if [ "${MODULE_NAME}" = "turbojpeg" ]; then
-cat <<EOT > ${HEADERS_DIR}/module.modulemap
+cat <<EOT > ${MODULEMAP_FILE}
 module ${MODULE_NAME} [system] {
   header "turbojpeg.h"
   export *
 }
 EOT
   elif [ "${MODULE_NAME}" = "libjpeg" ]; then
-cat <<EOT > ${HEADERS_DIR}/module.modulemap
+cat <<EOT > ${MODULEMAP_FILE}
 module ${MODULE_NAME} [system] {
   header "jpeglib.h"
   header "jerror.h"
@@ -158,11 +202,15 @@ module ${MODULE_NAME} [system] {
 EOT
   fi
 
-  # Build static xcframework
+  BUNDLE_ID="org.libjpeg-turbo.${MODULE_NAME}"
+
+  # Build static xcframework using .framework bundles
   STATIC_ARGS=""
   for S in ${SLICES[@]}; do
     if [ -f "${SLICES_DIR}/${S}/${LIB_NAME}.a" ]; then
-      STATIC_ARGS+="-library ${SLICES_DIR}/${S}/${LIB_NAME}.a -headers ${HEADERS_DIR} "
+      FW="${SLICES_DIR}/${S}/${MODULE_NAME}.framework"
+      create_framework_bundle "${FW}" "${MODULE_NAME}" "${SLICES_DIR}/${S}/${LIB_NAME}.a" "${HEADERS_DIR}" "${MODULEMAP_FILE}" "${BUNDLE_ID}"
+      STATIC_ARGS+="-framework ${FW} "
     fi
   done
 
@@ -172,11 +220,15 @@ EOT
     xcodebuild -create-xcframework ${STATIC_ARGS} -output ${BUILD_DIR}/static/${LIB_NAME}.xcframework
   fi
 
-  # Build dynamic xcframework
+  # Build dynamic xcframework using .framework bundles
   DYNAMIC_ARGS=""
   for S in ${SLICES[@]}; do
     if [ -f "${SLICES_DIR}/${S}/${LIB_NAME}.dylib" ]; then
-      DYNAMIC_ARGS+="-library ${SLICES_DIR}/${S}/${LIB_NAME}.dylib -headers ${HEADERS_DIR} "
+      FW="${SLICES_DIR}/${S}/${MODULE_NAME}-dynamic.framework"
+      create_framework_bundle "${FW}" "${MODULE_NAME}" "${SLICES_DIR}/${S}/${LIB_NAME}.dylib" "${HEADERS_DIR}" "${MODULEMAP_FILE}" "${BUNDLE_ID}"
+      # Fix install name for the dynamic library to match framework bundle path
+      install_name_tool -id "@rpath/${MODULE_NAME}.framework/${MODULE_NAME}" "${FW}/${MODULE_NAME}"
+      DYNAMIC_ARGS+="-framework ${FW} "
     fi
   done
 
@@ -318,14 +370,17 @@ build_combined() {
       LIB_NAME="libjpeg"
     fi
 
-    # Prepare headers
+    # Prepare headers (staging area)
     HEADERS_DIR="${COMBINED_DIR}/include-${MODULE_NAME}"
     rm -rf ${HEADERS_DIR}
     mkdir -p ${HEADERS_DIR}
 
+    # Prepare modulemap (staging file)
+    MODULEMAP_FILE="${COMBINED_DIR}/modulemap-${MODULE_NAME}"
+
     if [ "${MODULE_NAME}" = "turbojpeg" ]; then
       cp ${HEADER_SOURCE}/turbojpeg.h ${HEADERS_DIR}/
-cat <<EOT > ${HEADERS_DIR}/module.modulemap
+cat <<EOT > ${MODULEMAP_FILE}
 module ${MODULE_NAME} [system] {
   header "turbojpeg.h"
   export *
@@ -336,7 +391,7 @@ EOT
       cp ${HEADER_SOURCE}/jerror.h ${HEADERS_DIR}/
       cp ${HEADER_SOURCE}/jmorecfg.h ${HEADERS_DIR}/
       cp ${HEADER_SOURCE}/jconfig.h ${HEADERS_DIR}/
-cat <<EOT > ${HEADERS_DIR}/module.modulemap
+cat <<EOT > ${MODULEMAP_FILE}
 module ${MODULE_NAME} [system] {
   header "jpeglib.h"
   header "jerror.h"
@@ -346,6 +401,8 @@ module ${MODULE_NAME} [system] {
 }
 EOT
     fi
+
+    BUNDLE_ID="org.libjpeg-turbo.${MODULE_NAME}"
 
     for LINKAGE in static dynamic; do
       if [ "${LINKAGE}" = "static" ]; then
@@ -357,7 +414,12 @@ EOT
       ARGS=""
       for SLICE_DIR in ${ALL_SLICES_DIRS[@]}; do
         if [ -f "${SLICE_DIR}/${LIB_NAME}.${EXT}" ]; then
-          ARGS+="-library ${SLICE_DIR}/${LIB_NAME}.${EXT} -headers ${HEADERS_DIR} "
+          FW="${SLICE_DIR}/${MODULE_NAME}-${LINKAGE}.framework"
+          create_framework_bundle "${FW}" "${MODULE_NAME}" "${SLICE_DIR}/${LIB_NAME}.${EXT}" "${HEADERS_DIR}" "${MODULEMAP_FILE}" "${BUNDLE_ID}"
+          if [ "${LINKAGE}" = "dynamic" ]; then
+            install_name_tool -id "@rpath/${MODULE_NAME}.framework/${MODULE_NAME}" "${FW}/${MODULE_NAME}"
+          fi
+          ARGS+="-framework ${FW} "
         fi
       done
 
