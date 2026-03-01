@@ -1,4 +1,6 @@
 build-*/*
+!build-*/*/
+build-*/*/*
 !build-*/*/toolchain.cmake
 
 /libjpeg-turbo
