@@ -10,12 +10,17 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
       - name: Install cmake
         run: brew install cmake
+
+      - name: Install additional platform SDKs
+        run: |
+          xcodebuild -downloadPlatform tvOS
+          xcodebuild -downloadPlatform visionOS
 
       - name: Build all platforms
         run: sh build.sh all
