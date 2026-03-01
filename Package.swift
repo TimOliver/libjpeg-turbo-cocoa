@@ -14,33 +14,14 @@ let package = Package(
         .visionOS(.v1)
     ],
     products: [
-        // turbojpeg — static (default)
-        .library(name: "turbojpeg-ios", targets: ["turbojpeg-ios"]),
-        .library(name: "turbojpeg-macos", targets: ["turbojpeg-macos"]),
-        .library(name: "turbojpeg-tvos", targets: ["turbojpeg-tvos"]),
-        .library(name: "turbojpeg-visionos", targets: ["turbojpeg-visionos"]),
-
-        // turbojpeg — dynamic
-        .library(name: "turbojpeg-ios-dynamic", targets: ["turbojpeg-ios-dynamic"]),
-        .library(name: "turbojpeg-macos-dynamic", targets: ["turbojpeg-macos-dynamic"]),
-        .library(name: "turbojpeg-tvos-dynamic", targets: ["turbojpeg-tvos-dynamic"]),
-        .library(name: "turbojpeg-visionos-dynamic", targets: ["turbojpeg-visionos-dynamic"]),
-
-        // libjpeg — static (default)
-        .library(name: "libjpeg-ios", targets: ["libjpeg-ios"]),
-        .library(name: "libjpeg-macos", targets: ["libjpeg-macos"]),
-        .library(name: "libjpeg-tvos", targets: ["libjpeg-tvos"]),
-        .library(name: "libjpeg-visionos", targets: ["libjpeg-visionos"]),
-
-        // libjpeg — dynamic
-        .library(name: "libjpeg-ios-dynamic", targets: ["libjpeg-ios-dynamic"]),
-        .library(name: "libjpeg-macos-dynamic", targets: ["libjpeg-macos-dynamic"]),
-        .library(name: "libjpeg-tvos-dynamic", targets: ["libjpeg-tvos-dynamic"]),
-        .library(name: "libjpeg-visionos-dynamic", targets: ["libjpeg-visionos-dynamic"]),
+        .library(name: "turbojpeg", targets: ["turbojpeg"]),
+        .library(name: "turbojpeg-dynamic", targets: ["turbojpeg-dynamic"]),
+        .library(name: "libjpeg", targets: ["libjpeg"]),
+        .library(name: "libjpeg-dynamic", targets: ["libjpeg-dynamic"]),
     ],
     targets: [
-        // MARK: - turbojpeg static
         .binaryTarget(
+<<<<<<< Updated upstream
             name: "turbojpeg-ios",
             url: "\(baseURL)/libturbojpeg-ios-static.xcframework.zip",
             checksum: "0b10d844cc83a081d6c407aab41e9dfd5ef9f3c877cbfb4060e02012a44d9ecb"
@@ -125,6 +106,26 @@ let package = Package(
             name: "libjpeg-visionos-dynamic",
             url: "\(baseURL)/libjpeg-visionos-dynamic.xcframework.zip",
             checksum: "101eab92e2d7d62af0d26740ecdbf55ea8f57ba98690964f9055b12dbbbb3982"
+=======
+            name: "turbojpeg",
+            url: "\(baseURL)/libturbojpeg-static.xcframework.zip",
+            checksum: "TODO"
+        ),
+        .binaryTarget(
+            name: "turbojpeg-dynamic",
+            url: "\(baseURL)/libturbojpeg-dynamic.xcframework.zip",
+            checksum: "TODO"
+        ),
+        .binaryTarget(
+            name: "libjpeg",
+            url: "\(baseURL)/libjpeg-static.xcframework.zip",
+            checksum: "TODO"
+        ),
+        .binaryTarget(
+            name: "libjpeg-dynamic",
+            url: "\(baseURL)/libjpeg-dynamic.xcframework.zip",
+            checksum: "TODO"
+>>>>>>> Stashed changes
         ),
     ]
 )

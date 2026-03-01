@@ -291,13 +291,93 @@ build_visionos() {
   echo "=== visionOS build complete ==="
 }
 
+build_combined() {
+  echo "=== Building combined XCFrameworks ==="
+
+  COMBINED_DIR="build-combined"
+  mkdir -p ${COMBINED_DIR}
+
+  # All fat binary output paths across platforms
+  ALL_SLICES_DIRS=( \
+    "build-ios/ios-output/ios-device" \
+    "build-ios/ios-output/ios-simulator" \
+    "build-ios/ios-output/ios-mac-catalyst" \
+    "build-macos/macos-output/macos" \
+    "build-tvos/tvos-output/tvos-device" \
+    "build-tvos/tvos-output/tvos-simulator" \
+    "build-visionos/visionos-output/visionos-device-arm64" \
+    "build-visionos/visionos-output/visionos-simulator-arm64" \
+  )
+
+  HEADER_SOURCE="build-ios/ios-device-arm64"
+
+  for MODULE_NAME in turbojpeg libjpeg; do
+    if [ "${MODULE_NAME}" = "turbojpeg" ]; then
+      LIB_NAME="libturbojpeg"
+    else
+      LIB_NAME="libjpeg"
+    fi
+
+    # Prepare headers
+    HEADERS_DIR="${COMBINED_DIR}/include-${MODULE_NAME}"
+    rm -rf ${HEADERS_DIR}
+    mkdir -p ${HEADERS_DIR}
+
+    if [ "${MODULE_NAME}" = "turbojpeg" ]; then
+      cp ${HEADER_SOURCE}/turbojpeg.h ${HEADERS_DIR}/
+cat <<EOT > ${HEADERS_DIR}/module.modulemap
+module ${MODULE_NAME} [system] {
+  header "turbojpeg.h"
+  export *
+}
+EOT
+    else
+      cp ${HEADER_SOURCE}/jpeglib.h ${HEADERS_DIR}/
+      cp ${HEADER_SOURCE}/jerror.h ${HEADERS_DIR}/
+      cp ${HEADER_SOURCE}/jmorecfg.h ${HEADERS_DIR}/
+      cp ${HEADER_SOURCE}/jconfig.h ${HEADERS_DIR}/
+cat <<EOT > ${HEADERS_DIR}/module.modulemap
+module ${MODULE_NAME} [system] {
+  header "jpeglib.h"
+  header "jerror.h"
+  header "jmorecfg.h"
+  header "jconfig.h"
+  export *
+}
+EOT
+    fi
+
+    for LINKAGE in static dynamic; do
+      if [ "${LINKAGE}" = "static" ]; then
+        EXT="a"
+      else
+        EXT="dylib"
+      fi
+
+      ARGS=""
+      for SLICE_DIR in ${ALL_SLICES_DIRS[@]}; do
+        if [ -f "${SLICE_DIR}/${LIB_NAME}.${EXT}" ]; then
+          ARGS+="-library ${SLICE_DIR}/${LIB_NAME}.${EXT} -headers ${HEADERS_DIR} "
+        fi
+      done
+
+      if [ ! -z "${ARGS}" ]; then
+        OUTPUT="${COMBINED_DIR}/${LIB_NAME}-${LINKAGE}.xcframework"
+        rm -rf ${OUTPUT}
+        xcodebuild -create-xcframework ${ARGS} -output ${OUTPUT}
+      fi
+    done
+  done
+
+  echo "=== Combined XCFrameworks complete ==="
+}
+
 package() {
   echo "=== Packaging ==="
 
   mkdir -p ${OUTPUT_DIR}
 
-  # Zip xcframeworks from static/ and dynamic/ subdirectories
-  # with platform+linkage in the zip filename
+  # Zip per-platform xcframeworks from static/ and dynamic/ subdirectories
   for PLATFORM_DIR in build-ios build-macos build-tvos build-visionos; do
     # Extract platform name (e.g. "ios" from "build-ios")
     PLATFORM=$(echo ${PLATFORM_DIR} | sed 's/build-//')
@@ -320,6 +400,18 @@ package() {
         fi
       done
     done
+  done
+
+  # Zip combined xcframeworks (used by SPM)
+  for XCF in build-combined/*.xcframework; do
+    if [ -d "${XCF}" ]; then
+      XCF_NAME=$(basename ${XCF})
+      ZIP_NAME="${XCF_NAME}.zip"
+      echo "Zipping ${ZIP_NAME}..."
+      cd build-combined
+      zip -r -y ${OUTPUT_DIR}/${ZIP_NAME} ${XCF_NAME}
+      cd ${BASE_PATH}
+    fi
   done
 
   # Compute checksums
@@ -348,6 +440,7 @@ case "$COMMAND" in
         build_macos
         build_tvos
         build_visionos
+        build_combined
         package
         exit 0
         ;;
