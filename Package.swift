@@ -43,12 +43,12 @@ let package = Package(
         .binaryTarget(
             name: "turbojpeg-ios",
             url: "\(baseURL)/libturbojpeg-ios-static.xcframework.zip",
-            checksum: "b05278552498335efc95ca1fb89a3a2f7ff3cc2886e4bd9c8da837b8b4ae9595"
+            checksum: "e9c96a75a308d35e95af7a610c986104e2009aa28a000785d7c98e606f423590"
         ),
         .binaryTarget(
             name: "turbojpeg-macos",
             url: "\(baseURL)/libturbojpeg-macos-static.xcframework.zip",
-            checksum: "3c5c14ea2d837659265e8618f103afcc6bf6ad4afb726f0c633c83cb3414a45d"
+            checksum: "ef5f7a257bd787789ffb3fa50a9e9587f0a48781750c857014468d609dc0bc0d"
         ),
         .binaryTarget(
             name: "turbojpeg-tvos",
@@ -65,12 +65,12 @@ let package = Package(
         .binaryTarget(
             name: "turbojpeg-ios-dynamic",
             url: "\(baseURL)/libturbojpeg-ios-dynamic.xcframework.zip",
-            checksum: "c1435a1c54f5c7a0eae861c9018ba7acdc79e15ce5c679aa14eec4b8975922ab"
+            checksum: "e422c59e59ecf8e8cb62240b993290df046adb139993c7b261caeca69be520ed"
         ),
         .binaryTarget(
             name: "turbojpeg-macos-dynamic",
             url: "\(baseURL)/libturbojpeg-macos-dynamic.xcframework.zip",
-            checksum: "5c66eef9a7a73b5a869dd71c71090f26a59c8028816f2df6f16cbdfc5a32e046"
+            checksum: "c1fb812b3696419a77d90b6e434498de8ff90de10a867db8cc4599cb0dd909fd"
         ),
         .binaryTarget(
             name: "turbojpeg-tvos-dynamic",
@@ -87,12 +87,12 @@ let package = Package(
         .binaryTarget(
             name: "libjpeg-ios",
             url: "\(baseURL)/libjpeg-ios-static.xcframework.zip",
-            checksum: "da333a8114af02a711a85cd07a2cdfdf9ad9f88c4014581a75918d3b1db596c3"
+            checksum: "23eb4b73da7ff6fbb2dabe051cc370311a003a72d79d36f7bab59803354a1ed1"
         ),
         .binaryTarget(
             name: "libjpeg-macos",
             url: "\(baseURL)/libjpeg-macos-static.xcframework.zip",
-            checksum: "8c530e747ffc1d7e4c2d3d2ddb18f54748210b3ba15a90c7dc73edab51baf12d"
+            checksum: "7b84c321eba1029e456326192e3f0b919ff56fd92102e2f9a1e919514c77b687"
         ),
         .binaryTarget(
             name: "libjpeg-tvos",
@@ -109,12 +109,12 @@ let package = Package(
         .binaryTarget(
             name: "libjpeg-ios-dynamic",
             url: "\(baseURL)/libjpeg-ios-dynamic.xcframework.zip",
-            checksum: "714a7af4eb294b01d8ac00f04f7f2bc6aeb860d0a58561e663fc16e42c03a56e"
+            checksum: "605ee3f267fa15c8a71b0ba693885372310291639fdf31da92d142de2abe5c31"
         ),
         .binaryTarget(
             name: "libjpeg-macos-dynamic",
             url: "\(baseURL)/libjpeg-macos-dynamic.xcframework.zip",
-            checksum: "f280fde7b1c853b5969c7a47ce6d2b7d56db795299ff3af383c470ca76a7995d"
+            checksum: "0cecb61ff5b56a4bdd8c3afebb4d502ef7d3559f16b27a150fcc31fd908c743b"
         ),
         .binaryTarget(
             name: "libjpeg-tvos-dynamic",
