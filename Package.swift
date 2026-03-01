@@ -6,7 +6,7 @@ let version = "3.1.3"
 let baseURL = "https://github.com/TimOliver/libjpeg-turbo-cocoa/releases/download/\(version)"
 
 let package = Package(
-    name: "libjpeg-turbo",
+    name: "libjpeg-turbo-cocoa",
     platforms: [
         .iOS(.v16),
         .macOS(.v13),
