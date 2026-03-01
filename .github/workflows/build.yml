@@ -20,9 +20,30 @@ jobs:
       - name: Build all platforms
         run: sh build.sh all
 
+      - name: Update Package.swift
+        run: |
+          # Update version
+          sed -i '' "s/let version = \".*\"/let version = \"${{ inputs.version }}\"/" Package.swift
+
+          # Replace checksum placeholders with computed values
+          for ZIP in output/*.xcframework.zip; do
+            FILENAME=$(basename "$ZIP")
+            CHECKSUM=$(swift package compute-checksum "$ZIP")
+            echo "$FILENAME: $CHECKSUM"
+            sed -i '' "/$FILENAME/{n;s/checksum: \".*\"/checksum: \"$CHECKSUM\"/;}" Package.swift
+          done
+
+      - name: Commit Package.swift
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Package.swift
+          git commit -m "Update Package.swift for ${{ inputs.version }}"
+          git push
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.version }}
-          name: ${{ inputs.version }}
+          name: v${{ inputs.version }}
           files: output/*.xcframework.zip
