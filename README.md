@@ -22,7 +22,7 @@ This package provides two libraries from libjpeg-turbo:
 - **turbojpeg** — The TurboJPEG API (recommended, simpler and higher-level)
 - **libjpeg** — The traditional libjpeg API
 
-Both are available as static and dynamic variants.
+Both are available as static and dynamic variants, per platform.
 
 ## Swift Package Manager
 
@@ -30,20 +30,38 @@ Add this package to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/<owner>/libjpeg-turbo-cocoa.git", from: "3.0.4")
+    .package(url: "https://github.com/TimOliver/libjpeg-turbo-cocoa.git", from: "3.1.3")
 ]
 ```
 
-Then add the desired library to your target:
+Then add the platform-specific product to your target. Since each platform has its own binary, use platform conditions for multi-platform targets:
 
 ```swift
 .target(
     name: "YourTarget",
-    dependencies: ["turbojpeg"]  // or "libjpeg", "turbojpeg-dynamic", "libjpeg-dynamic"
+    dependencies: [
+        .product(name: "turbojpeg-ios", package: "libjpeg-turbo-cocoa",
+                 condition: .when(platforms: [.iOS])),
+        .product(name: "turbojpeg-macos", package: "libjpeg-turbo-cocoa",
+                 condition: .when(platforms: [.macOS])),
+        .product(name: "turbojpeg-tvos", package: "libjpeg-turbo-cocoa",
+                 condition: .when(platforms: [.tvOS])),
+        .product(name: "turbojpeg-visionos", package: "libjpeg-turbo-cocoa",
+                 condition: .when(platforms: [.visionOS])),
+    ]
 )
 ```
 
 Or add it via Xcode: File > Add Package Dependencies, and enter the repository URL.
+
+### Available Products
+
+| Library | iOS | macOS | tvOS | visionOS |
+|---------|-----|-------|------|----------|
+| turbojpeg (static) | `turbojpeg-ios` | `turbojpeg-macos` | `turbojpeg-tvos` | `turbojpeg-visionos` |
+| turbojpeg (dynamic) | `turbojpeg-ios-dynamic` | `turbojpeg-macos-dynamic` | `turbojpeg-tvos-dynamic` | `turbojpeg-visionos-dynamic` |
+| libjpeg (static) | `libjpeg-ios` | `libjpeg-macos` | `libjpeg-tvos` | `libjpeg-visionos` |
+| libjpeg (dynamic) | `libjpeg-ios-dynamic` | `libjpeg-macos-dynamic` | `libjpeg-tvos-dynamic` | `libjpeg-visionos-dynamic` |
 
 ## Building from Source
 
@@ -76,17 +94,21 @@ Override the libjpeg-turbo version with an environment variable:
 LIBJPEGTURBO_TAG_VERSION=3.1.0 sh build.sh all
 ```
 
-Default version: **3.0.4**
+Default version: **3.1.3**
 
 ## Output
 
 After running `sh build.sh all`, you'll find:
 
-- `build-ios/` — iOS xcframeworks (static + dynamic)
-- `build-macos/` — macOS xcframeworks (static + dynamic)
-- `build-tvos/` — tvOS xcframeworks (static + dynamic)
-- `build-visionos/` — visionOS xcframeworks (static + dynamic)
+- `build-<platform>/static/` — Static xcframeworks
+- `build-<platform>/dynamic/` — Dynamic xcframeworks
 - `output/` — Zipped xcframeworks with checksums for distribution
+
+Zip filenames follow the pattern `lib<name>-<platform>-<linkage>.xcframework.zip`.
+
+## CI / Releases
+
+Releases are built via a GitHub Actions workflow (`build.yml`), triggered manually with a version number input. The workflow builds all platforms and uploads the 16 xcframework zips as release assets.
 
 ## License
 
