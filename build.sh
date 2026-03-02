@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # Print a list of all of the build options this script supports
 usage() {
