@@ -23,22 +23,22 @@ let package = Package(
         .binaryTarget(
             name: "turbojpeg",
             url: "\(baseURL)/libjpeg-turbo-v\(version)-xcframework-turbojpeg-static.zip",
-            checksum: "28d9c60f4d9cd591c1196c7b8eda7978b4d70f9f47a6106337e5be75bc9aef5b"
+            checksum: "d7413a32c14e006037e9d085a67e8b24c46d8f3fd6e81329562cc1c96976cbb5"
         ),
         .binaryTarget(
             name: "turbojpeg-dynamic",
             url: "\(baseURL)/libjpeg-turbo-v\(version)-xcframework-turbojpeg-dynamic.zip",
-            checksum: "b05c0373ce40dd94242aa0c53667fd385646d04240bb65eafaed15e01300b825"
+            checksum: "672adda76ede48ebba1dba853fb1157115ba41d093ecdcac438a4c3e9d88ee87"
         ),
         .binaryTarget(
             name: "libjpeg",
             url: "\(baseURL)/libjpeg-turbo-v\(version)-xcframework-jpeglib-static.zip",
-            checksum: "2937c5910270a43720ff51a0385c64cc5782481a6a6d5dbbc9934dca453994c6"
+            checksum: "263df56d6388e7252cc187a90b9e5852a77b02ecbb70e7fd0bc0811d88ef73a6"
         ),
         .binaryTarget(
             name: "libjpeg-dynamic",
             url: "\(baseURL)/libjpeg-turbo-v\(version)-xcframework-jpeglib-dynamic.zip",
-            checksum: "dbff9751aa51ab4358f9cf4e39b7ae1b3f7dd1330a8c6211748f67d6e31eb0b1"
+            checksum: "f3155465831e092f59c520aa9e6718e3086f0ea63bb5a55aec8da8f1b88b1e2e"
         ),
     ]
 )
