@@ -197,6 +197,7 @@ framework module ${MODULE_NAME} [system] {
   header "jerror.h"
   header "jmorecfg.h"
   header "jconfig.h"
+  use Darwin
   export *
 }
 EOT
@@ -397,6 +398,7 @@ framework module ${MODULE_NAME} [system] {
   header "jerror.h"
   header "jmorecfg.h"
   header "jconfig.h"
+  use Darwin
   export *
 }
 EOT
