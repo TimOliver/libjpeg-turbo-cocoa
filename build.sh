@@ -179,6 +179,10 @@ make_xcframework() {
     cp ${HEADER_SOURCE_DIR}/jerror.h ${HEADERS_DIR}/jerror.h
     cp ${HEADER_SOURCE_DIR}/jmorecfg.h ${HEADERS_DIR}/jmorecfg.h
     cp ${HEADER_SOURCE_DIR}/jconfig.h ${HEADERS_DIR}/jconfig.h
+    # jpeglib.h deliberately omits #include <stdio.h> for legacy reasons,
+    # but Clang modules require headers to be self-contained.
+    sed -i '' '1i\
+#include <stdio.h>' ${HEADERS_DIR}/jpeglib.h
   fi
 
   # Save a modulemap to a staging file
@@ -197,7 +201,6 @@ framework module ${MODULE_NAME} [system] {
   header "jerror.h"
   header "jmorecfg.h"
   header "jconfig.h"
-  use Darwin
   export *
 }
 EOT
@@ -392,13 +395,16 @@ EOT
       cp ${HEADER_SOURCE}/jerror.h ${HEADERS_DIR}/
       cp ${HEADER_SOURCE}/jmorecfg.h ${HEADERS_DIR}/
       cp ${HEADER_SOURCE}/jconfig.h ${HEADERS_DIR}/
+      # jpeglib.h deliberately omits #include <stdio.h> for legacy reasons,
+      # but Clang modules require headers to be self-contained.
+      sed -i '' '1i\
+#include <stdio.h>' ${HEADERS_DIR}/jpeglib.h
 cat <<EOT > ${MODULEMAP_FILE}
 framework module ${MODULE_NAME} [system] {
   header "jpeglib.h"
   header "jerror.h"
   header "jmorecfg.h"
   header "jconfig.h"
-  use Darwin
   export *
 }
 EOT
