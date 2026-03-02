@@ -47,6 +47,10 @@ sh build.sh all
 | `libjpeg` | static | libjpeg-compatible API |
 | `libjpeg-dynamic` | dynamic | libjpeg-compatible API |
 
+## Module maps
+
+Module maps are generated inline in `build.sh` (inside `make_xcframework` and `build_combined`). The `jpeglib` module map includes `use Darwin` so that Clang can resolve `size_t` (from `<stddef.h>`) and `FILE` (from `<stdio.h>`) when building the precompiled module. Without this, consumers get `unknown type name 'size_t'` / `unknown type name 'FILE'` errors at import time. If similar errors appear for `turbojpeg`, the same `use Darwin` fix applies.
+
 ## CI
 
 GitHub Actions workflow at `.github/workflows/build.yml`, triggered manually with a `version` input. Runs on `macos-26`, installs cmake via brew, downloads tvOS/visionOS SDKs, builds, updates `Package.swift` checksums, commits, and creates a GitHub release.
