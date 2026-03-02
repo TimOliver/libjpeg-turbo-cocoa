@@ -185,14 +185,14 @@ make_xcframework() {
   MODULEMAP_FILE=${SLICES_DIR}"/modulemap-${MODULE_NAME}"
   if [ "${MODULE_NAME}" = "turbojpeg" ]; then
 cat <<EOT > ${MODULEMAP_FILE}
-module ${MODULE_NAME} [system] {
+framework module ${MODULE_NAME} [system] {
   header "turbojpeg.h"
   export *
 }
 EOT
   elif [ "${MODULE_NAME}" = "jpeglib" ]; then
 cat <<EOT > ${MODULEMAP_FILE}
-module ${MODULE_NAME} [system] {
+framework module ${MODULE_NAME} [system] {
   header "jpeglib.h"
   header "jerror.h"
   header "jmorecfg.h"
@@ -381,7 +381,7 @@ build_combined() {
     if [ "${MODULE_NAME}" = "turbojpeg" ]; then
       cp ${HEADER_SOURCE}/turbojpeg.h ${HEADERS_DIR}/
 cat <<EOT > ${MODULEMAP_FILE}
-module ${MODULE_NAME} [system] {
+framework module ${MODULE_NAME} [system] {
   header "turbojpeg.h"
   export *
 }
@@ -392,7 +392,7 @@ EOT
       cp ${HEADER_SOURCE}/jmorecfg.h ${HEADERS_DIR}/
       cp ${HEADER_SOURCE}/jconfig.h ${HEADERS_DIR}/
 cat <<EOT > ${MODULEMAP_FILE}
-module ${MODULE_NAME} [system] {
+framework module ${MODULE_NAME} [system] {
   header "jpeglib.h"
   header "jerror.h"
   header "jmorecfg.h"
