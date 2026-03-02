@@ -30,12 +30,14 @@ jobs:
           # Update version
           sed -i '' "s/let version = \".*\"/let version = \"${{ inputs.version }}\"/" Package.swift
 
-          # Replace checksum placeholders with computed values
-          for ZIP in output/*.xcframework.zip; do
-            FILENAME=$(basename "$ZIP")
-            CHECKSUM=$(swift package compute-checksum "$ZIP")
-            echo "$FILENAME: $CHECKSUM"
-            sed -i '' "/$FILENAME/{n;s/checksum: \".*\"/checksum: \"$CHECKSUM\"/;}" Package.swift
+          # Replace checksums for each combined xcframework zip
+          for MODULE in turbojpeg jpeglib; do
+            for VARIANT in static dynamic; do
+              ZIP="output/libjpeg-turbo-v${{ inputs.version }}-xcframework-${MODULE}-${VARIANT}.zip"
+              CHECKSUM=$(swift package compute-checksum "$ZIP")
+              echo "${MODULE}-${VARIANT}: $CHECKSUM"
+              sed -i '' "/xcframework-${MODULE}-${VARIANT}\.zip/{n;s/checksum: \".*\"/checksum: \"$CHECKSUM\"/;}" Package.swift
+            done
           done
 
       - name: Commit Package.swift
@@ -50,4 +52,4 @@ jobs:
         with:
           tag_name: ${{ inputs.version }}
           name: v${{ inputs.version }}
-          files: output/*.xcframework.zip
+          files: output/*.zip

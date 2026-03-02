@@ -174,7 +174,7 @@ make_xcframework() {
 
   if [ "${MODULE_NAME}" = "turbojpeg" ]; then
     cp ${HEADER_SOURCE_DIR}/turbojpeg.h ${HEADERS_DIR}/turbojpeg.h
-  elif [ "${MODULE_NAME}" = "libjpeg" ]; then
+  elif [ "${MODULE_NAME}" = "jpeglib" ]; then
     cp ${HEADER_SOURCE_DIR}/jpeglib.h ${HEADERS_DIR}/jpeglib.h
     cp ${HEADER_SOURCE_DIR}/jerror.h ${HEADERS_DIR}/jerror.h
     cp ${HEADER_SOURCE_DIR}/jmorecfg.h ${HEADERS_DIR}/jmorecfg.h
@@ -190,7 +190,7 @@ module ${MODULE_NAME} [system] {
   export *
 }
 EOT
-  elif [ "${MODULE_NAME}" = "libjpeg" ]; then
+  elif [ "${MODULE_NAME}" = "jpeglib" ]; then
 cat <<EOT > ${MODULEMAP_FILE}
 module ${MODULE_NAME} [system] {
   header "jpeglib.h"
@@ -208,7 +208,7 @@ EOT
   STATIC_ARGS=""
   for S in ${SLICES[@]}; do
     if [ -f "${SLICES_DIR}/${S}/${LIB_NAME}.a" ]; then
-      FW="${SLICES_DIR}/${S}/${MODULE_NAME}.framework"
+      FW="${SLICES_DIR}/${S}/static/${MODULE_NAME}.framework"
       create_framework_bundle "${FW}" "${MODULE_NAME}" "${SLICES_DIR}/${S}/${LIB_NAME}.a" "${HEADERS_DIR}" "${MODULEMAP_FILE}" "${BUNDLE_ID}"
       STATIC_ARGS+="-framework ${FW} "
     fi
@@ -216,15 +216,15 @@ EOT
 
   if [ ! -z "${STATIC_ARGS}" ]; then
     mkdir -p ${BUILD_DIR}/static
-    rm -rf ${BUILD_DIR}/static/${LIB_NAME}.xcframework
-    xcodebuild -create-xcframework ${STATIC_ARGS} -output ${BUILD_DIR}/static/${LIB_NAME}.xcframework
+    rm -rf ${BUILD_DIR}/static/${MODULE_NAME}.xcframework
+    xcodebuild -create-xcframework ${STATIC_ARGS} -output ${BUILD_DIR}/static/${MODULE_NAME}.xcframework
   fi
 
   # Build dynamic xcframework using .framework bundles
   DYNAMIC_ARGS=""
   for S in ${SLICES[@]}; do
     if [ -f "${SLICES_DIR}/${S}/${LIB_NAME}.dylib" ]; then
-      FW="${SLICES_DIR}/${S}/${MODULE_NAME}-dynamic.framework"
+      FW="${SLICES_DIR}/${S}/dynamic/${MODULE_NAME}.framework"
       create_framework_bundle "${FW}" "${MODULE_NAME}" "${SLICES_DIR}/${S}/${LIB_NAME}.dylib" "${HEADERS_DIR}" "${MODULEMAP_FILE}" "${BUNDLE_ID}"
       # Fix install name for the dynamic library to match framework bundle path
       install_name_tool -id "@rpath/${MODULE_NAME}.framework/${MODULE_NAME}" "${FW}/${MODULE_NAME}"
@@ -234,8 +234,8 @@ EOT
 
   if [ ! -z "${DYNAMIC_ARGS}" ]; then
     mkdir -p ${BUILD_DIR}/dynamic
-    rm -rf ${BUILD_DIR}/dynamic/${LIB_NAME}.xcframework
-    xcodebuild -create-xcframework ${DYNAMIC_ARGS} -output ${BUILD_DIR}/dynamic/${LIB_NAME}.xcframework
+    rm -rf ${BUILD_DIR}/dynamic/${MODULE_NAME}.xcframework
+    xcodebuild -create-xcframework ${DYNAMIC_ARGS} -output ${BUILD_DIR}/dynamic/${MODULE_NAME}.xcframework
   fi
 }
 
@@ -262,7 +262,7 @@ build_ios() {
   # Combine the fat binaries into XCFramework bundles
   SLICES=("ios-mac-catalyst" "ios-simulator" "ios-device")
   make_xcframework "build-ios" "build-ios/ios-output" "libturbojpeg" "turbojpeg" "build-ios/ios-device-arm64" "${SLICES[@]}"
-  make_xcframework "build-ios" "build-ios/ios-output" "libjpeg" "libjpeg" "build-ios/ios-device-arm64" "${SLICES[@]}"
+  make_xcframework "build-ios" "build-ios/ios-output" "libjpeg" "jpeglib" "build-ios/ios-device-arm64" "${SLICES[@]}"
 
   echo "=== iOS build complete ==="
 }
@@ -284,7 +284,7 @@ build_macos() {
   # Create XCFramework bundles
   SLICES=("macos")
   make_xcframework "build-macos" "build-macos/macos-output" "libturbojpeg" "turbojpeg" "build-macos/macos-arm64" "${SLICES[@]}"
-  make_xcframework "build-macos" "build-macos/macos-output" "libjpeg" "libjpeg" "build-macos/macos-arm64" "${SLICES[@]}"
+  make_xcframework "build-macos" "build-macos/macos-output" "libjpeg" "jpeglib" "build-macos/macos-arm64" "${SLICES[@]}"
 
   echo "=== macOS build complete ==="
 }
@@ -309,7 +309,7 @@ build_tvos() {
   # Create XCFramework bundles
   SLICES=("tvos-device" "tvos-simulator")
   make_xcframework "build-tvos" "build-tvos/tvos-output" "libturbojpeg" "turbojpeg" "build-tvos/tvos-device-arm64" "${SLICES[@]}"
-  make_xcframework "build-tvos" "build-tvos/tvos-output" "libjpeg" "libjpeg" "build-tvos/tvos-device-arm64" "${SLICES[@]}"
+  make_xcframework "build-tvos" "build-tvos/tvos-output" "libjpeg" "jpeglib" "build-tvos/tvos-device-arm64" "${SLICES[@]}"
 
   echo "=== tvOS build complete ==="
 }
@@ -338,7 +338,7 @@ build_visionos() {
   # Create XCFramework bundles
   SLICES=("visionos-device-arm64" "visionos-simulator-arm64")
   make_xcframework "build-visionos" "build-visionos/visionos-output" "libturbojpeg" "turbojpeg" "build-visionos/visionos-device-arm64" "${SLICES[@]}"
-  make_xcframework "build-visionos" "build-visionos/visionos-output" "libjpeg" "libjpeg" "build-visionos/visionos-device-arm64" "${SLICES[@]}"
+  make_xcframework "build-visionos" "build-visionos/visionos-output" "libjpeg" "jpeglib" "build-visionos/visionos-device-arm64" "${SLICES[@]}"
 
   echo "=== visionOS build complete ==="
 }
@@ -363,7 +363,7 @@ build_combined() {
 
   HEADER_SOURCE="build-ios/ios-device-arm64"
 
-  for MODULE_NAME in turbojpeg libjpeg; do
+  for MODULE_NAME in turbojpeg jpeglib; do
     if [ "${MODULE_NAME}" = "turbojpeg" ]; then
       LIB_NAME="libturbojpeg"
     else
@@ -414,7 +414,7 @@ EOT
       ARGS=""
       for SLICE_DIR in ${ALL_SLICES_DIRS[@]}; do
         if [ -f "${SLICE_DIR}/${LIB_NAME}.${EXT}" ]; then
-          FW="${SLICE_DIR}/${MODULE_NAME}-${LINKAGE}.framework"
+          FW="${SLICE_DIR}/${LINKAGE}/${MODULE_NAME}.framework"
           create_framework_bundle "${FW}" "${MODULE_NAME}" "${SLICE_DIR}/${LIB_NAME}.${EXT}" "${HEADERS_DIR}" "${MODULEMAP_FILE}" "${BUNDLE_ID}"
           if [ "${LINKAGE}" = "dynamic" ]; then
             install_name_tool -id "@rpath/${MODULE_NAME}.framework/${MODULE_NAME}" "${FW}/${MODULE_NAME}"
@@ -424,7 +424,7 @@ EOT
       done
 
       if [ ! -z "${ARGS}" ]; then
-        OUTPUT="${COMBINED_DIR}/${LIB_NAME}-${LINKAGE}.xcframework"
+        OUTPUT="${COMBINED_DIR}/${MODULE_NAME}-${LINKAGE}.xcframework"
         rm -rf ${OUTPUT}
         xcodebuild -create-xcframework ${ARGS} -output ${OUTPUT}
       fi
@@ -453,8 +453,8 @@ package() {
       for XCF in ${LINKAGE_DIR}/*.xcframework; do
         if [ -d "${XCF}" ]; then
           XCF_NAME=$(basename ${XCF})
-          LIB_NAME=$(echo ${XCF_NAME} | sed 's/\.xcframework//')
-          ZIP_NAME="${LIB_NAME}-${PLATFORM}-${LINKAGE}.xcframework.zip"
+          MODULE=$(echo ${XCF_NAME} | sed 's/\.xcframework//')
+          ZIP_NAME="libjpeg-turbo-v${LIBRARY_VERSION}-xcframework-${PLATFORM}-${MODULE}-${LINKAGE}.zip"
           echo "Zipping ${ZIP_NAME}..."
           cd ${LINKAGE_DIR}
           zip -r -y ${OUTPUT_DIR}/${ZIP_NAME} ${XCF_NAME}
@@ -467,11 +467,13 @@ package() {
   # Zip combined xcframeworks (used by SPM)
   for XCF in build-combined/*.xcframework; do
     if [ -d "${XCF}" ]; then
-      XCF_NAME=$(basename ${XCF})
-      ZIP_NAME="${XCF_NAME}.zip"
+      XCF_NAME=$(basename ${XCF} .xcframework)
+      MODULE="${XCF_NAME%-*}"
+      LINKAGE="${XCF_NAME##*-}"
+      ZIP_NAME="libjpeg-turbo-v${LIBRARY_VERSION}-xcframework-${MODULE}-${LINKAGE}.zip"
       echo "Zipping ${ZIP_NAME}..."
       cd build-combined
-      zip -r -y ${OUTPUT_DIR}/${ZIP_NAME} ${XCF_NAME}
+      zip -r -y ${OUTPUT_DIR}/${ZIP_NAME} "${XCF_NAME}.xcframework"
       cd ${BASE_PATH}
     fi
   done
